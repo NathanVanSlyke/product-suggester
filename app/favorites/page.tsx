@@ -1,4 +1,3 @@
-// app/favorites/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -27,7 +26,6 @@ export default function FavoritesPage() {
     if (userString) {
       setCurrentUser(JSON.parse(userString));
     } else {
-      // If no user, send back to login
       router.push('/login');
     }
   }, [router]);
@@ -54,10 +52,9 @@ export default function FavoritesPage() {
   // 3. Handle "Un-favorite" click
   const handleUnfavorite = async (productId: number) => {
     if (!currentUser) return;
-
-    // Optimistic UI: remove from list immediately
+    
     setFavorites(favorites.filter(f => f.product_id !== productId));
-
+    
     try {
       await fetch(
         `/api/favorites?uid=${currentUser.uid}&productId=${productId}`,
@@ -65,7 +62,6 @@ export default function FavoritesPage() {
       );
     } catch (error) {
       console.error('Failed to unfavorite', error);
-      // TODO: Add logic to "re-add" the item if the API call fails
     }
   };
 
@@ -82,18 +78,20 @@ export default function FavoritesPage() {
       </header>
 
       {isLoading && <p>Loading favorites...</p>}
-
+      
       <div className="w-full max-w-lg space-y-4">
         {!isLoading && favorites.length === 0 && (
           <p>You haven't favorited any products yet.</p>
         )}
-
+        
         {favorites.map((product) => (
           <div key={product.product_id} className="p-4 border rounded-lg bg-gray-800 flex justify-between items-start">
             <div>
-              <h3 className="text-xl font-semibold">{product.name}</h3>
+              {/* --- FIX 1 --- */}
+              <h3 className="text-xl font-semibold text-white">{product.name}</h3>
               <p className="text-gray-300">{product.price_range}</p>
-              <p className="mt-2">{product.ai_summary}</p>
+              {/* --- FIX 2 --- */}
+              <p className="mt-2 text-gray-200">{product.ai_summary}</p>
             </div>
             <button
               onClick={() => handleUnfavorite(product.product_id)}

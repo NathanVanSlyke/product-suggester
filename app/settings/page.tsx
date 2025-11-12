@@ -1,9 +1,7 @@
-// app/settings/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Define the User type again, just like on the homepage
 type User = {
   uid: string;
   isLoggedIn: boolean;
@@ -16,18 +14,17 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // State for our custom "are you sure?" modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   const router = useRouter();
 
-  // 1. Get user from localStorage on page load
+  // 1. Get user from localStorage
   useEffect(() => {
     const userString = localStorage.getItem('user');
     if (userString) {
       setCurrentUser(JSON.parse(userString));
     } else {
-      router.push('/login'); // Not logged in, send them away
+      router.push('/login');
     }
     setIsLoading(false);
   }, [router]);
@@ -48,7 +45,6 @@ export default function SettingsPage() {
       
       if (!response.ok) throw new Error('Failed to update preference.');
 
-      // IMPORTANT: We must update *both* state and localStorage
       const updatedUser = { ...currentUser, allow_saving: newConsent };
       setCurrentUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -70,13 +66,12 @@ export default function SettingsPage() {
       
       if (!response.ok) throw new Error('Failed to delete account.');
       
-      // If successful, log them out and send to homepage
       localStorage.removeItem('user');
       router.push('/');
 
     } catch (err: any) {
       setError(err.message);
-      setShowDeleteModal(false); // Close the modal on error
+      setShowDeleteModal(false);
     }
   };
 
@@ -90,7 +85,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      {/* --- Main Page Content --- */}
       <main className="flex min-h-screen flex-col items-center p-12">
         <header className="w-full max-w-5xl flex justify-between items-center mb-16">
           <h1 className="text-4xl font-bold">Settings</h1>
@@ -102,8 +96,9 @@ export default function SettingsPage() {
           </button>
         </header>
         
-        <section className="w-full max-w-lg p-8 bg-gray-800 rounded-lg space-y-6">
-          {/* --- Consent Settings --- */}
+        {/* */}
+        <section className="w-full max-w-lg p-8 bg-gray-800 rounded-lg space-y-6 text-white">
+          
           <div>
             <h2 className="text-2xl font-semibold mb-2">Privacy Settings</h2>
             <div className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
@@ -126,13 +121,13 @@ export default function SettingsPage() {
             </div>
           </div>
           
-          {/* --- Account Deletion --- */}
           <div>
+            {/* This red text will correctly override the parent 'text-white' */}
             <h2 className="text-2xl font-semibold mb-2 text-red-400">Danger Zone</h2>
             <div className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
               <p>Permanently delete your account.</p>
               <button
-                onClick={() => setShowDeleteModal(true)} // This opens the modal
+                onClick={() => setShowDeleteModal(true)}
                 className="bg-red-600 text-white py-2 px-4 rounded-lg"
               >
                 Delete Account
@@ -145,7 +140,6 @@ export default function SettingsPage() {
         </section>
       </main>
       
-      {/* --- Confirmation Modal --- */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl text-black max-w-sm text-center">
@@ -155,13 +149,13 @@ export default function SettingsPage() {
             </p>
             <div className="flex justify-around">
               <button
-                onClick={() => setShowDeleteModal(false)} // Close modal
+                onClick={() => setShowDeleteModal(false)}
                 className="bg-gray-600 text-white py-2 px-6 rounded-lg"
               >
                 Cancel
               </button>
               <button
-                onClick={handleDeleteAccount} // Call delete function
+                onClick={handleDeleteAccount}
                 className="bg-red-600 text-white py-2 px-6 rounded-lg"
               >
                 Yes, Delete

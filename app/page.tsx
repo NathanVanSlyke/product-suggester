@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -161,7 +160,6 @@ export default function Home() {
   return (
     <main className="flex min-h-screen">
       
-      {/* --- SIDEBAR --- */}
       {currentUser && currentUser.allow_saving === true && (
         <aside className="w-64 bg-gray-900 p-4 space-y-2 overflow-y-auto">
           <h2 className="text-lg font-semibold text-white mb-2">Past Searches</h2>
@@ -185,9 +183,7 @@ export default function Home() {
         </aside>
       )}
 
-      {/* --- MAIN CONTENT AREA --- */}
       <div className="flex-1 flex flex-col items-center p-12">
-        {/* --- HEADER (THIS IS THE MODIFIED PART) --- */}
         <header className="w-full max-w-5xl flex justify-between items-center mb-16">
           <h1 className="text-4xl font-bold">Product Suggester</h1>
           <nav className="flex items-center space-x-4">
@@ -204,7 +200,6 @@ export default function Home() {
                   </button>
                 )}
                 
-                {/* --- THIS IS THE NEW "SETTINGS" BUTTON --- */}
                 <button
                   onClick={() => router.push('/settings')}
                   className="bg-gray-600 text-white py-2 px-4 rounded-lg"
@@ -237,7 +232,6 @@ export default function Home() {
             )}
           </nav>
         </header>
-        {/* --- END OF MODIFIED HEADER --- */}
 
         <section className="w-full max-w-lg">
           <form onSubmit={handleSubmit} className="w-full mb-8">
@@ -267,9 +261,11 @@ export default function Home() {
             {results.map((product) => (
               <div key={product.product_id} className="p-4 border rounded-lg bg-gray-800 flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-semibold">{product.product_name}</h3>
+                  {/* --- FIX 1 --- */}
+                  <h3 className="text-xl font-semibold text-white">{product.product_name}</h3>
                   <p className="text-gray-300">{product.price_range}</p>
-                  <p className="mt-2">{product.ai_summary}</p>
+                  {/* --- FIX 2 --- */}
+                  <p className="mt-2 text-gray-200">{product.ai_summary}</p>
                 </div>
                 
                 {currentUser && currentUser.allow_saving === true && (
