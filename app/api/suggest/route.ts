@@ -7,15 +7,32 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: Request) {
-  const { query, uid } = await request.json();
+  // --- MODIFIED: Get minPrice and maxPrice ---
+  const { query, uid, minPrice, maxPrice } = await request.json();
 
   try {
+    
+    // --- NEW: Dynamic Price Constraint Logic ---
+    let priceConstraint = '';
+    const min = parseInt(minPrice);
+    const max = parseInt(maxPrice);
+
+    if (!isNaN(min) && min > 0 && !isNaN(max) && max > 0 && max > min) {
+      priceConstraint = ` Please ensure all suggested products are between $${min} and $${max}.`;
+    } else if (!isNaN(min) && min > 0) {
+      priceConstraint = ` Please ensure all suggested products are above $${min}.`;
+    } else if (!isNaN(max) && max > 0) {
+      priceConstraint = ` Please ensure all suggested products are under $${max}.`;
+    }
+    // If no valid prices, the string remains empty (no constraint)
+    
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o", // Using the best model
       messages: [
         {
           role: "system",
-          content: `You are a helpful product suggestion assistant. The user is looking for a product. Based on their query, suggest 6 products. For each product, provide a "product_name", a short "ai_summary", and a "price_range". Respond ONLY with the raw JSON array text. Do NOT include markdown code fences or any other text.`,
+          // --- MODIFIED: Added priceConstraint to the prompt ---
+          content: `You are a helpful product suggestion assistant. The user is looking for a product. Based on their query, suggest 3 products. For each product, provide a "product_name", a short "ai_summary", and a "price_range". Respond ONLY with the raw JSON array text. Do NOT include markdown code fences or any other text.${priceConstraint}`,
         },
         {
           role: "user",
@@ -26,7 +43,9 @@ export async function POST(request: Request) {
 
     const rawResponse = response.choices[0].message?.content;
 
-    // --- Save the query (this part is fine) ---
+    // --- (Rest of the file is identical to the one we fixed) ---
+
+    // --- Save the query (if allowed) ---
     if (uid) {
       try {
         const userRes = await pool.query('SELECT allow_saving FROM users WHERE uid = $1', [uid]);
@@ -40,29 +59,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // --- THIS IS THE NEW, SMARTER PARSING BLOCK ---
+    // --- Robust JSON Parsing ---
     let suggestionsWithIds = [];
     try {
       if (!rawResponse) {
         throw new Error("AI returned an empty response.");
       }
-
-      // 1. Find the start of the JSON array
       const jsonStart = rawResponse.indexOf('[');
-      // 2. Find the end of the JSON array
       const jsonEnd = rawResponse.lastIndexOf(']');
-      
       if (jsonStart === -1 || jsonEnd === -1) {
         throw new Error("No valid JSON array found in AI response.");
       }
-
-      // 3. Extract the clean JSON string
       const jsonString = rawResponse.substring(jsonStart, jsonEnd + 1);
-
-      // 4. Parse the *clean* string
       const productSuggestions = JSON.parse(jsonString);
 
-      // --- This is the product-saving logic from before ---
+      // --- Save products to DB ---
       suggestionsWithIds = await Promise.all(
         productSuggestions.map(async (product: any) => {
           const { product_name, ai_summary, price_range } = product;
@@ -92,7 +103,6 @@ export async function POST(request: Request) {
         { status: 502 }
       );
     }
-    // --- END OF NEW BLOCK ---
     
     return NextResponse.json(suggestionsWithIds);
 

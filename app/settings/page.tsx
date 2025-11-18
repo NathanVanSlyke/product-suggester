@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// --- UPDATED USER TYPE ---
 type User = {
   uid: string;
   isLoggedIn: boolean;
   allow_saving: boolean | null;
+  email: string; // <-- ADDED EMAIL (though not used here, good for consistency)
 };
 
 export default function SettingsPage() {
@@ -18,7 +20,6 @@ export default function SettingsPage() {
   
   const router = useRouter();
 
-  // 1. Get user from localStorage
   useEffect(() => {
     const userString = localStorage.getItem('user');
     if (userString) {
@@ -29,7 +30,6 @@ export default function SettingsPage() {
     setIsLoading(false);
   }, [router]);
 
-  // 2. Handle the consent toggle
   const handleConsentChange = async (newConsent: boolean) => {
     if (!currentUser) return;
     
@@ -55,7 +55,6 @@ export default function SettingsPage() {
     }
   };
 
-  // 3. Handle the final "Delete" click
   const handleDeleteAccount = async () => {
     if (!currentUser) return;
     
@@ -66,13 +65,19 @@ export default function SettingsPage() {
       
       if (!response.ok) throw new Error('Failed to delete account.');
       
-      localStorage.removeItem('user');
-      router.push('/');
+      // Call the logout function to clear data and redirect
+      handleLogout();
 
     } catch (err: any) {
       setError(err.message);
       setShowDeleteModal(false);
     }
+  };
+  
+  // --- NEW LOGOUT FUNCTION ---
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    router.push('/');
   };
 
   if (isLoading || !currentUser) {
@@ -96,9 +101,23 @@ export default function SettingsPage() {
           </button>
         </header>
         
-        {/* */}
         <section className="w-full max-w-lg p-8 bg-gray-800 rounded-lg space-y-6 text-white">
           
+          {/* --- NEW ACCOUNT ACTIONS SECTION --- */}
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">Account Actions</h2>
+            <div className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
+              <p>Log out of your account.</p>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 text-white py-2 px-4 rounded-lg"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+          
+          {/* --- Privacy Settings --- */}
           <div>
             <h2 className="text-2xl font-semibold mb-2">Privacy Settings</h2>
             <div className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
@@ -121,8 +140,8 @@ export default function SettingsPage() {
             </div>
           </div>
           
+          {/* --- Account Deletion --- */}
           <div>
-            {/* This red text will correctly override the parent 'text-white' */}
             <h2 className="text-2xl font-semibold mb-2 text-red-400">Danger Zone</h2>
             <div className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
               <p>Permanently delete your account.</p>
@@ -140,6 +159,7 @@ export default function SettingsPage() {
         </section>
       </main>
       
+      {/* --- Confirmation Modal (Unchanged) --- */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl text-black max-w-sm text-center">

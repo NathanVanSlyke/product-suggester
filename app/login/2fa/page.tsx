@@ -84,11 +84,15 @@ export default function TwoFactorAuth() {
         throw new Error(data.error || 'Verification failed.');
       }
       
+      // --- THIS IS THE UPDATED LINE ---
       localStorage.setItem('user', JSON.stringify({ 
         uid: uid, 
         isLoggedIn: true, 
-        allow_saving: allowSaving // This will now have the correct value
+        allow_saving: allowSaving,
+        email: email // <-- WE ADDED THE EMAIL
         }));
+      // --- END OF UPDATE ---
+        
       router.push('/');
 
     } catch (err: any) {
